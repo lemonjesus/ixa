@@ -5,6 +5,8 @@
 
 #include <keystone/keystone.h>
 #include <capstone/capstone.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 
 ks_arch asm_arch = KS_ARCH_X86;
 ks_mode asm_mode = KS_MODE_32;
@@ -329,18 +331,20 @@ int mode_switch(char* input) {
 }
 
 int main() {
+  rl_bind_key('\t', rl_insert);
+
   printf("*** Interactive (dis)assembler ***\n");
   printf("*   Type `help` for commands.    *\n");
   printf("**********************************\n");
 
-  char* input = malloc(1024*sizeof(char));
+  char* input;
   int result;
 
   while(true) {
-    printf("> ");
-    result = gets(input);
-
-    if(result == 0) goto cleanup;
+    input = readline("> ");
+    if (strlen(input) > 0) {
+      add_history(input);
+    }
 
     switch(input[0]) {
     case 0:
@@ -377,6 +381,7 @@ int main() {
       printf("unknown command\n");
       break;
     }
+    free(input);
   }
 
   cleanup:
