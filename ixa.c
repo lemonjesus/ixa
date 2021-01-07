@@ -8,6 +8,8 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+#include "eval.h"
+
 ks_arch asm_arch = KS_ARCH_X86;
 ks_mode asm_mode = KS_MODE_32;
 cs_arch dsm_arch = CS_ARCH_X86;
@@ -40,6 +42,17 @@ int assemble(char* code) {
   ks_free(encode);
   ks_close(ks);
   return 0;
+}
+
+int calculate(char* expr) {
+  double result;
+
+  if(evaluate(expr, &result)) {
+    printf("%g\n\n", result);
+    return 0;
+  } else {
+    return 1;
+  }
 }
 
 // these next two functions were lifted straight out of `cstool` from Capstone
@@ -342,6 +355,9 @@ int main() {
 
   while(true) {
     input = readline("> ");
+
+    if(input == NULL) goto cleanup;
+
     if (strlen(input) > 0) {
       add_history(input);
     }
@@ -353,6 +369,12 @@ int main() {
       result = assemble(input+1);
       if(result != 0) {
         printf("failed to assemble. is a valid mode set?\n");
+      }
+      break;
+    case 'c': //calculate
+      result = calculate(input+1);
+      if(result != 0) {
+        printf("failed to calculate.\n");
       }
       break;
     case 'd': //disassemble
@@ -371,11 +393,17 @@ int main() {
       printf("a <instructions> - assemble into hex bytes\n");
       printf("d <bytes> - disassemble into instructions\n");
       printf("m <arch> <mode> <endianess> - mode switch (change archs)\n");
+      printf("c <expression> - evaluate a math expression\n");
+      printf("x <decimal> - convert decimal to hex");
       printf("h[elp] - this help\n");
-      printf("x - exit\n");
+      printf("q - exit\n");
       break;
-    case 'x': //exit
+    case 'q': //quit
       goto cleanup;
+      break;
+    case 'x': //hexify
+      result = atoi(input+1);
+      printf("0x%X\n\n", result);
       break;
     default:
       printf("unknown command\n");
